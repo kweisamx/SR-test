@@ -58,27 +58,28 @@ class ESPCN(object):
         
         self.weights = {
             'w1': tf.Variable(tf.random_normal([5, 5, self.c_dim, 64], stddev=np.sqrt(2.0/25/3)), name='w1'),
-            'w2': tf.Variable(tf.random_normal([3, 3, 64, 32], stddev=np.sqrt(2.0/9/64)), name='w2'),
-            'w3': tf.Variable(tf.random_normal([3, 3, 32, 32], stddev=np.sqrt(2.0/9/32)), name='w3'),
-            'w4': tf.Variable(tf.random_normal([3, 3, 32, 32], stddev=np.sqrt(2.0/9/32)), name='w4'),
-            'w5': tf.Variable(tf.random_normal([3, 3, 32, 32], stddev=np.sqrt(2.0/9/32)), name='w5'),
-            'w6': tf.Variable(tf.random_normal([3, 3, 32, 32], stddev=np.sqrt(2.0/9/32)), name='w6'),
-            'w7': tf.Variable(tf.random_normal([3, 3, 32, self.c_dim * self.scale * self.scale ], stddev=np.sqrt(2.0/9/32)), name='w7')
+            'w2': tf.Variable(tf.random_normal([3, 3, 64, 128], stddev=np.sqrt(2.0/9/64)), name='w2'),
+            'w3': tf.Variable(tf.random_normal([3, 3, 128, 128], stddev=np.sqrt(2.0/9/128)), name='w3'),
+            'w4': tf.Variable(tf.random_normal([3, 3, 128, 128], stddev=np.sqrt(2.0/9/128)), name='w4'),
+            'w5': tf.Variable(tf.random_normal([3, 3, 128, 128], stddev=np.sqrt(2.0/9/128)), name='w5'),
+            'w6': tf.Variable(tf.random_normal([3, 3, 128, 64], stddev=np.sqrt(2.0/9/128)), name='w6'),
+            'w7': tf.Variable(tf.random_normal([3, 3, 64, self.c_dim * self.scale * self.scale ], stddev=np.sqrt(2.0/9/64)), name='w7')
         }
 
         self.biases = {
             'b1': tf.Variable(tf.zeros([64], name='b1')),
-            'b2': tf.Variable(tf.zeros([32], name='b2')),
-            'b3': tf.Variable(tf.zeros([32], name='b3')),
-            'b4': tf.Variable(tf.zeros([32], name='b4')),
-            'b5': tf.Variable(tf.zeros([32], name='b5')),
-            'b6': tf.Variable(tf.zeros([32], name='b6')),
+            'b2': tf.Variable(tf.zeros([128], name='b2')),
+            'b3': tf.Variable(tf.zeros([128], name='b3')),
+            'b4': tf.Variable(tf.zeros([128], name='b4')),
+            'b5': tf.Variable(tf.zeros([128], name='b5')),
+            'b6': tf.Variable(tf.zeros([64], name='b6')),
             'b7': tf.Variable(tf.zeros([self.c_dim * self.scale * self.scale ], name='b7'))
         }
         
         self.pred = self.model()
         
-        self.loss = tf.reduce_mean(tf.square(self.labels - self.pred))
+        #self.loss = tf.reduce_mean(tf.square(self.labels - self.pred))
+        self.loss = tf.losses.huber_loss(self.labels, self.pred)
 
         self.saver = tf.train.Saver() # To save checkpoint
 
@@ -89,7 +90,7 @@ class ESPCN(object):
         conv4 = tf.nn.relu(tf.nn.conv2d(conv3, self.weights['w4'], strides=[1,1,1,1], padding='SAME') + self.biases['b4'])
         conv5 = tf.nn.relu(tf.nn.conv2d(conv4, self.weights['w5'], strides=[1,1,1,1], padding='SAME') + self.biases['b5'])
         conv6 = tf.nn.relu(tf.nn.conv2d(conv5, self.weights['w6'], strides=[1,1,1,1], padding='SAME') + self.biases['b6'])
-        conv7 = tf.nn.conv2d(conv4, self.weights['w7'], strides=[1,1,1,1], padding='SAME') + self.biases['b7'] # This layer don't need ReLU
+        conv7 = tf.nn.conv2d(conv6, self.weights['w7'], strides=[1,1,1,1], padding='SAME') + self.biases['b7'] # This layer don't need ReLU
 
         ps = self.PS(conv7, self.scale)
         return tf.nn.tanh(ps)
