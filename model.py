@@ -168,8 +168,8 @@ class ESPCN(object):
                     batch_images = input_[idx * config.batch_size : (idx + 1) * config.batch_size]
                     batch_residul = residul[idx * config.batch_size : (idx + 1) * config.batch_size]
                     batch_labels = label_[idx * config.batch_size : (idx + 1) * config.batch_size]
-                    checkimage(batch_images[0])
-                    checkimage(batch_residul[0])
+                    #checkimage(batch_images[0])
+                    #checkimage(batch_residul[0])
                     counter += 1
                     _, err = self.sess.run([self.train_op, self.loss], feed_dict={self.images: batch_images, self.labels: batch_labels, self.residul: batch_residul })
 
