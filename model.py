@@ -81,8 +81,8 @@ class ESPCN(object):
         
         self.pred = self.model()
         
-        #self.loss = tf.reduce_mean(tf.square(self.labels - self.pred))
-        self.loss = tf.losses.huber_loss(self.labels, self.pred + self.residul)
+        self.loss = tf.reduce_mean(tf.square(self.labels - self.pred - self.residul))
+        #self.loss = tf.losses.huber_loss(self.labels, self.pred + self.residul)
 
         self.saver = tf.train.Saver() # To save checkpoint
 
@@ -139,7 +139,17 @@ class ESPCN(object):
         input_, label_ = read_data(data_dir)
 
         residul = make_bicubic(input_, config.scale)
-        print(residul.shape)
+
+
+        '''
+        opt = tf.train.AdamOptimizer(learning_rate=config.learning_rate)
+        grad_and_value = opt.compute_gradients(self.loss)
+
+        clip = tf.Variable(0.1, name='clip') 
+        capped_gvs = [(tf.clip_by_value(grad, -(clip), clip), var) for grad, var in grad_and_value]
+
+        self.train_op = opt.apply_gradients(capped_gvs)
+        '''
         # Stochastic gradient descent with the standard backpropagation
         self.train_op = tf.train.AdamOptimizer(learning_rate=config.learning_rate).minimize(self.loss)
         tf.initialize_all_variables().run()
@@ -158,6 +168,8 @@ class ESPCN(object):
                     batch_images = input_[idx * config.batch_size : (idx + 1) * config.batch_size]
                     batch_residul = residul[idx * config.batch_size : (idx + 1) * config.batch_size]
                     batch_labels = label_[idx * config.batch_size : (idx + 1) * config.batch_size]
+                    checkimage(batch_images[0])
+                    checkimage(batch_residul[0])
                     counter += 1
                     _, err = self.sess.run([self.train_op, self.loss], feed_dict={self.images: batch_images, self.labels: batch_labels, self.residul: batch_residul })
 
@@ -169,10 +181,16 @@ class ESPCN(object):
         # Test
         else:
             print("Now Start Testing...")
-            #inputImg = modcrop(input_[0],scale = self.scale)
             print(input_[0].shape)
-            result = self.pred.eval({self.images: input_[0].reshape(1, input_[0].shape[0], input_[0].shape[1], self.c_dim)}) + residul[0]
+
+            checkimage(residul[0])
+            result = self.pred.eval({self.images: input_[0].reshape(1, input_[0].shape[0], input_[0].shape[1], self.c_dim)})
             x = np.squeeze(result)
+            #checkimage(x)
+            x = residul[0] + x
+            
+            # back to interval [0 , 1]
+            x = ( x + 1 ) / 2
             checkimage(x)
             print(x.shape)
             imsave(x, config.result_dir+'/result.png', config)

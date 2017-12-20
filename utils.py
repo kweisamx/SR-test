@@ -13,7 +13,6 @@ def imread(path):
     return img
 
 def imsave(image, path, config):
-    #checkimage(image)
     # Check the check dir, if not, create one
     if not os.path.isdir(os.path.join(os.getcwd(),config.result_dir)):
         os.makedirs(os.path.join(os.getcwd(),config.result_dir))
@@ -63,7 +62,6 @@ def preprocess(path ,scale = 3):
     kernel_size = (7, 7);
     sigma = 3.0;
     #input_ = cv2.GaussianBlur(input_, kernel_size, sigma);
-    #checkimage(input_)
 
     return input_, label_
 
@@ -113,9 +111,8 @@ def make_sub_data(data, config):
         
         if not config.is_train:
             input_ = imread(data[i])
-
             # Normialize
-            input_ = input_ / 255.0
+            input_ = (input_ / 255.0 ) * 2 - 1 
             sub_input_sequence.append(input_)
             return sub_input_sequence, sub_label_sequence
 
@@ -132,7 +129,7 @@ def make_sub_data(data, config):
                 sub_input = sub_input.reshape([config.image_size, config.image_size, config.c_dim])
 
                 # Normialize
-                sub_input =  sub_input / 255.0
+                sub_input =  (sub_input / 255.0) * 2 - 1
 
                 # Add to sequence
                 sub_input_sequence.append(sub_input)
@@ -145,7 +142,7 @@ def make_sub_data(data, config):
                 # Reshape the subinput and sublabel
                 sub_label = sub_label.reshape([config.image_size * config.scale , config.image_size * config.scale, config.c_dim])
                 # Normialize
-                sub_label =  sub_label / 255.0
+                sub_label =  (sub_label / 255.0) * 2 - 1
                 # Add to sequence
                 sub_label_sequence.append(sub_label)
 
@@ -156,11 +153,9 @@ def make_sub_data(data, config):
 def make_bicubic(input_, scale = 3):
     residul = []
     for i in range(input_.shape[0]):
-        #print(input_[i].shape)
-        img = cv2.resize(input_[i].copy(), None, fx = scale, fy = scale, interpolation = cv2.INTER_CUBIC) 
-        #checkimage(img)
-        #print(img.shape)
+        img = cv2.resize(input_[i].copy() , None, fx = scale, fy = scale, interpolation = cv2.INTER_CUBIC) 
         residul.append(img)
+
     residul = np.asarray(residul)
     return residul
 
