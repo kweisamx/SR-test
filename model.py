@@ -89,10 +89,10 @@ class ESPCN(object):
     def model(self):
         conv1 = tf.nn.relu(tf.nn.conv2d(self.images, self.weights['w1'], strides=[1,1,1,1], padding='SAME') + self.biases['b1'])
         conv2 = tf.nn.relu(tf.nn.conv2d(conv1, self.weights['w2'], strides=[1,1,1,1], padding='SAME') + self.biases['b2'])
-        conv3 = tf.nn.relu(tf.nn.conv2d(conv2, self.weights['w3'], strides=[1,1,1,1], padding='SAME') + self.biases['b3'])
-        conv4 = tf.nn.relu(tf.nn.conv2d(conv3, self.weights['w4'], strides=[1,1,1,1], padding='SAME') + self.biases['b4'])
-        conv5 = tf.nn.relu(tf.nn.conv2d(conv4, self.weights['w5'], strides=[1,1,1,1], padding='SAME') + self.biases['b5'])
-        conv6 = tf.nn.relu(tf.nn.conv2d(conv5, self.weights['w6'], strides=[1,1,1,1], padding='SAME') + self.biases['b6'])
+        #conv3 = tf.nn.relu(tf.nn.conv2d(conv2, self.weights['w3'], strides=[1,1,1,1], padding='SAME') + self.biases['b3'])
+        #conv4 = tf.nn.relu(tf.nn.conv2d(conv3, self.weights['w4'], strides=[1,1,1,1], padding='SAME') + self.biases['b4'])
+        #conv5 = tf.nn.relu(tf.nn.conv2d(conv4, self.weights['w5'], strides=[1,1,1,1], padding='SAME') + self.biases['b5'])
+        conv6 = tf.nn.relu(tf.nn.conv2d(conv2, self.weights['w6'], strides=[1,1,1,1], padding='SAME') + self.biases['b6'])
         conv7 = tf.nn.conv2d(conv6, self.weights['w7'], strides=[1,1,1,1], padding='SAME') + self.biases['b7'] # This layer don't need ReLU
 
         ps = self.PS(conv7, self.scale)
