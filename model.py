@@ -2,7 +2,7 @@ import tensorflow as tf
 import numpy as np
 import time
 import os
-
+import cv2
 from utils import (
     input_setup,
     checkpoint_dir,
@@ -13,6 +13,7 @@ from utils import (
     load_data,
     preprocess,
     modcrop,
+    make_bicubic,
 )
 class ESPCN(object):
 
@@ -39,7 +40,8 @@ class ESPCN(object):
 
         if self.is_train:
             self.images = tf.placeholder(tf.float32, [None, self.image_size, self.image_size, self.c_dim], name='images')
-            self.labels = tf.placeholder(tf.float32, [None, self.image_size * self.scale , self.image_size * self.scale, self.c_dim], name='labels')
+            self.residul = tf.placeholder(tf.float32, [None, self.image_size * self.scale, self.image_size * self.scale, self.c_dim], name='residul')
+            self.labels = tf.placeholder(tf.float32, [None, self.image_size * self.scale, self.image_size * self.scale, self.c_dim], name='labels')
         else:
             '''
                 Because the test need to put image to model,
@@ -54,6 +56,7 @@ class ESPCN(object):
             self.modw = self.w / self.scale * self.scale 
 
             self.images = tf.placeholder(tf.float32, [None, self.h, self.w, self.c_dim], name='images')
+            self.residul = tf.placeholder(tf.float32, [None, self.h * self.scale, self.w * self.scale, self.c_dim], name='residul')
             self.labels = tf.placeholder(tf.float32, [None, self.h * self.scale, self.w * self.scale, self.c_dim], name='labels')
         
         self.weights = {
@@ -79,7 +82,7 @@ class ESPCN(object):
         self.pred = self.model()
         
         #self.loss = tf.reduce_mean(tf.square(self.labels - self.pred))
-        self.loss = tf.losses.huber_loss(self.labels, self.pred)
+        self.loss = tf.losses.huber_loss(self.labels, self.pred + self.residul)
 
         self.saver = tf.train.Saver() # To save checkpoint
 
@@ -135,6 +138,8 @@ class ESPCN(object):
         
         input_, label_ = read_data(data_dir)
 
+        residul = make_bicubic(input_, config.scale)
+        print(residul.shape)
         # Stochastic gradient descent with the standard backpropagation
         self.train_op = tf.train.AdamOptimizer(learning_rate=config.learning_rate).minimize(self.loss)
         tf.initialize_all_variables().run()
@@ -151,9 +156,10 @@ class ESPCN(object):
                 batch_idxs = len(input_) // config.batch_size
                 for idx in range(0, batch_idxs):
                     batch_images = input_[idx * config.batch_size : (idx + 1) * config.batch_size]
+                    batch_residul = residul[idx * config.batch_size : (idx + 1) * config.batch_size]
                     batch_labels = label_[idx * config.batch_size : (idx + 1) * config.batch_size]
                     counter += 1
-                    _, err = self.sess.run([self.train_op, self.loss], feed_dict={self.images: batch_images, self.labels: batch_labels})
+                    _, err = self.sess.run([self.train_op, self.loss], feed_dict={self.images: batch_images, self.labels: batch_labels, self.residul: batch_residul })
 
                     if counter % 10 == 0:
                         print("Epoch: [%2d], step: [%2d], time: [%4.4f], loss: [%.8f]" % ((ep+1), counter, time.time()-time_, err))
@@ -165,7 +171,7 @@ class ESPCN(object):
             print("Now Start Testing...")
             #inputImg = modcrop(input_[0],scale = self.scale)
             print(input_[0].shape)
-            result = self.pred.eval({self.images: input_[0].reshape(1, input_[0].shape[0], input_[0].shape[1], self.c_dim)})
+            result = self.pred.eval({self.images: input_[0].reshape(1, input_[0].shape[0], input_[0].shape[1], self.c_dim)}) + residul[0]
             x = np.squeeze(result)
             checkimage(x)
             print(x.shape)
