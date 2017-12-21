@@ -58,12 +58,17 @@ def preprocess(path ,scale = 3):
     label_ = modcrop(img, scale)
     
     input_ = cv2.resize(label_, None, fx = 1.0/scale, fy = 1.0/scale, interpolation = cv2.INTER_AREA) # Resize by scaling factor
+    
 
-    kernel_size = (7, 7);
-    sigma = 3.0;
-    #input_ = cv2.GaussianBlur(input_, kernel_size, sigma);
+    #NOTE: add noise
+    s_vs_p = 0.5
+    amount = 0.08
+    out = input_.copy()
+    num_salt = np.ceil(amount * input_.size * s_vs_p)
+    coords = [np.random.randint(0, i - 1, int(num_salt)) for i in input_.shape]
+    out[coords] = 1
 
-    return input_, label_
+    return out, label_
 
 def prepare_data(dataset="Train",Input_img=""):
     """
