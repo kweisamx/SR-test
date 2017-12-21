@@ -197,7 +197,7 @@ class ESPCN(object):
             To load the checkpoint use to test or pretrain
         """
         print("\nReading Checkpoints.....\n\n")
-        model_dir = "%s_%s_%s" % ("espcn", self.image_size, self.scale)# give the model name by label_size
+        model_dir = "%s_%s_%s" % ("rees", self.image_size, self.scale)# give the model name by label_size
         checkpoint_dir = os.path.join(checkpoint_dir, model_dir)
         ckpt = tf.train.get_checkpoint_state(checkpoint_dir)
         
@@ -213,7 +213,7 @@ class ESPCN(object):
             To save the checkpoint use to test or pretrain
         """
         model_name = "ESPCN.model"
-        model_dir = "%s_%s_%s" % ("espcn", self.image_size, self.scale)
+        model_dir = "%s_%s_%s" % ("rees", self.image_size, self.scale)
         checkpoint_dir = os.path.join(checkpoint_dir, model_dir)
 
         if not os.path.exists(checkpoint_dir):
