@@ -81,18 +81,18 @@ class ESPCN(object):
         
         self.pred = self.model()
         
-        self.loss = tf.reduce_mean(tf.square(self.labels - self.pred - self.residul))
-        #self.loss = tf.losses.huber_loss(self.labels, self.pred + self.residul)
+        #self.loss = tf.reduce_mean(tf.square(self.labels - self.pred - self.residul))
+        self.loss = tf.losses.huber_loss(self.labels, self.pred + self.residul)
 
         self.saver = tf.train.Saver() # To save checkpoint
 
     def model(self):
-        conv1 = tf.nn.relu(tf.nn.conv2d(self.images, self.weights['w1'], strides=[1,1,1,1], padding='SAME') + self.biases['b1'])
-        conv2 = tf.nn.relu(tf.nn.conv2d(conv1, self.weights['w2'], strides=[1,1,1,1], padding='SAME') + self.biases['b2'])
-        #conv3 = tf.nn.relu(tf.nn.conv2d(conv2, self.weights['w3'], strides=[1,1,1,1], padding='SAME') + self.biases['b3'])
-        #conv4 = tf.nn.relu(tf.nn.conv2d(conv3, self.weights['w4'], strides=[1,1,1,1], padding='SAME') + self.biases['b4'])
-        #conv5 = tf.nn.relu(tf.nn.conv2d(conv4, self.weights['w5'], strides=[1,1,1,1], padding='SAME') + self.biases['b5'])
-        conv6 = tf.nn.relu(tf.nn.conv2d(conv2, self.weights['w6'], strides=[1,1,1,1], padding='SAME') + self.biases['b6'])
+        conv1 = tf.nn.leaky_relu(tf.nn.conv2d(self.images, self.weights['w1'], strides=[1,1,1,1], padding='SAME') + self.biases['b1'], alpha = 0.1)
+        conv2 = tf.nn.leaky_relu(tf.nn.conv2d(conv1, self.weights['w2'], strides=[1,1,1,1], padding='SAME') + self.biases['b2'], alpha = 0.1)
+        conv3 = tf.nn.leaky_relu(tf.nn.conv2d(conv2, self.weights['w3'], strides=[1,1,1,1], padding='SAME') + self.biases['b3'], alpha = 0.1)
+        conv4 = tf.nn.leaky_relu(tf.nn.conv2d(conv3, self.weights['w4'], strides=[1,1,1,1], padding='SAME') + self.biases['b4'], alpha = 0.1)
+        conv5 = tf.nn.leaky_relu(tf.nn.conv2d(conv4, self.weights['w5'], strides=[1,1,1,1], padding='SAME') + self.biases['b5'], alpha = 0.1)
+        conv6 = tf.nn.leaky_relu(tf.nn.conv2d(conv5, self.weights['w6'], strides=[1,1,1,1], padding='SAME') + self.biases['b6'], alpha = 0.1)
         conv7 = tf.nn.conv2d(conv6, self.weights['w7'], strides=[1,1,1,1], padding='SAME') + self.biases['b7'] # This layer don't need ReLU
 
         ps = self.PS(conv7, self.scale)
@@ -168,8 +168,6 @@ class ESPCN(object):
                     batch_images = input_[idx * config.batch_size : (idx + 1) * config.batch_size]
                     batch_residul = residul[idx * config.batch_size : (idx + 1) * config.batch_size]
                     batch_labels = label_[idx * config.batch_size : (idx + 1) * config.batch_size]
-                    #checkimage(batch_images[0])
-                    #checkimage(batch_residul[0])
                     counter += 1
                     _, err = self.sess.run([self.train_op, self.loss], feed_dict={self.images: batch_images, self.labels: batch_labels, self.residul: batch_residul })
 
@@ -186,7 +184,7 @@ class ESPCN(object):
             checkimage(residul[0])
             result = self.pred.eval({self.images: input_[0].reshape(1, input_[0].shape[0], input_[0].shape[1], self.c_dim)})
             x = np.squeeze(result)
-            #checkimage(x)
+            checkimage(x)
             x = residul[0] + x
             
             # back to interval [0 , 1]
