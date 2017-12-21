@@ -62,11 +62,12 @@ def preprocess(path ,scale = 3):
 
     #NOTE: add noise
     s_vs_p = 0.5
-    amount = 0.08
+    amount = 0.1
     out = input_.copy()
     num_salt = np.ceil(amount * input_.size * s_vs_p)
     coords = [np.random.randint(0, i - 1, int(num_salt)) for i in input_.shape]
     out[coords] = 1
+    #checkimage(out)
 
     return out, label_
 

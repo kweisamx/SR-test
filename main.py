@@ -1,5 +1,5 @@
 import tensorflow as tf
-from model import ESPCN
+from model import REES
 flags = tf.app.flags
 FLAGS = flags.FLAGS
 flags.DEFINE_integer("epoch", 150000, "Number of epoch")
@@ -18,7 +18,7 @@ flags.DEFINE_string("test_img", "", "test_img")
 
 def main(_): #?
     with tf.Session() as sess:
-        espcn = ESPCN(sess,
+        espcn = REES(sess,
                       image_size = FLAGS.image_size,
                       is_train = FLAGS.is_train,
                       scale = FLAGS.scale,

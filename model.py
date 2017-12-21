@@ -15,7 +15,7 @@ from utils import (
     modcrop,
     make_bicubic,
 )
-class ESPCN(object):
+class REES(object):
 
     def __init__(self,
                  sess,
@@ -212,7 +212,7 @@ class ESPCN(object):
         """
             To save the checkpoint use to test or pretrain
         """
-        model_name = "ESPCN.model"
+        model_name = "REES.model"
         model_dir = "%s_%s_%s" % ("rees", self.image_size, self.scale)
         checkpoint_dir = os.path.join(checkpoint_dir, model_dir)
 
